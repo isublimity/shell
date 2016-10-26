@@ -23,7 +23,7 @@ class xyzActions
         for ($f=0;$f<$seconds;$f++)
         {
             sleep(1);
-            echo "Sleep,....".($seconds-$f)."\r";
+            echo "Sleep....".($seconds-$f)."      \r";
         }
         echo "\nExit\n";
     }
@@ -45,17 +45,22 @@ include 'src/Shell/ShellException.php';
 try
 {
     Shell::name("ModelsCH");
-    Shell::alertMail('na@garika.net');
-    Shell::setLogFile("/tmp/",'models');
-    Shell::setPathPid("/tmp/");
-    Shell::setPidCommands(array('state','test'));
+//    Shell::alertMail('na@garika.net');
+//    Shell::setPathLog("/tmp/");
+//    Shell::setPathPid("/tmp/");
+//    Shell::setPidCommands(array('list','test'));
     // -------------------------------------------------------
-    Shell::maxExecutionTime(10);
+//    Shell::maxExecutionMinutes(12);
     // -------------------------------------------------------
     Shell::run(
         new xyzActions()
     );
 
+
+    Shell::msg("LOG:".Shell::getLogFile());
+    Shell::msg("PID:".Shell::getPidFileName());
+    Shell::msg("message");
+    Shell::debug("DEBUG!");
     Shell::info("INFO!");
     Shell::warning("WARN!");
     Shell::error("ERORR!!");

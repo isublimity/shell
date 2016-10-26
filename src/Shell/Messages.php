@@ -41,9 +41,34 @@ class Messages
             throw new \Exception("Can`t store to file");
         }
     }
+
+
+    public function debug($message)
+    {
+        if ($this->verbosity<\Shell::VERBOSITY_DEBUG) return false;
+        return $this->msg($message,[\Shell::dark_gray,\Shell::italic]);
+    }
+
+    public function warning($message)
+    {
+        return $this->msg($message,[\Shell::yellow]);
+    }
+    public function error($message,$sendAlert=true)
+    {
+        return $this->msg($message,[\Shell::white,\Shell::bg_red,\Shell::bold]);
+    }
+    public function info($message)
+    {
+        if ($this->verbosity<\Shell::VERBOSITY_INFO) return false;
+        return $this->msg($message,[\Shell::cyan]);
+    }
     public function msg($message, $styles, $eol = true, $timepoints=true)
     {
 
+        if (!(is_string($message) || is_numeric($message)) )
+        {
+            $message=json_encode($message,JSON_PRETTY_PRINT);
+        }
         if (is_int($styles) && $styles > 1) {
             $xc = $styles;
             $styles = [];
@@ -87,7 +112,7 @@ class Messages
         echo trim($message).($eol?PHP_EOL:"");
         flush();
         $this->storeFile($message);
-        return $message;
+        return true;
 
     }
 
