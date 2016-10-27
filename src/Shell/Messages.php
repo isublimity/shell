@@ -42,7 +42,6 @@ class Messages
         }
     }
 
-
     public function debug($message)
     {
         if ($this->verbosity<\Shell::VERBOSITY_DEBUG) return false;
@@ -61,6 +60,12 @@ class Messages
     {
         if ($this->verbosity<\Shell::VERBOSITY_INFO) return false;
         return $this->msg($message,[\Shell::cyan]);
+    }
+    public function colorize($message)
+    {
+        $message=$this->color()->colorize($message);
+        $this->color()->reset();
+        return $message;
     }
     public function msg($message, $styles, $eol = true, $timepoints=true)
     {
@@ -87,12 +92,14 @@ class Messages
         $this->color()->reset();
 
         if (is_array($styles) && sizeof($styles)) {
+
             $message = trim($message);
             foreach ($styles as $k) {
-                $message = $this->color()->apply($k, $message);
-
+                $message='<'.$k.'>'.$message.'</'.$k.'>';
             }
+
         }
+        $message=$this->color()->colorize($message);
         $this->color()->reset();
 
         // ------------------------------------------------
@@ -109,10 +116,60 @@ class Messages
             }
 
         }
-        echo trim($message).($eol?PHP_EOL:"");
+        if ($eol) $message=trim($message);
+        echo $message.($eol?PHP_EOL:"");
         flush();
         $this->storeFile($message);
         return true;
+
+    }
+
+    /**
+     * Prompts the user for input. Optionally masking it.
+     *
+     * @param   string  $prompt     The prompt to show the user
+     * @param   bool    $masked     If true, the users input will not be shown. e.g. password input
+     * @param   int     $limit      The maximum amount of input to accept
+     * @return  string
+     */
+    public static function prompt($prompt, $masked=false, $limit=100)
+    {
+        echo "$prompt: ";
+        if ($masked) {
+            `stty -echo`; // disable shell echo
+        }
+        $buffer = "";
+        $char = "";
+        $f = fopen('php://stdin', 'r');
+        while (strlen($buffer) < $limit) {
+            $char = fread($f, 1);
+            if ($char == "\n" || $char == "\r") {
+                break;
+            }
+            $buffer.= $char;
+        }
+        if ($masked) {
+            `stty echo`; // enable shell echo
+            echo "\n";
+        }
+        return $buffer;
+    }
+
+    /**
+     * Prompts the user with a yes/no question.
+     *
+     * @param   string  $prompt     The prompt to show the user
+     * @return  bool
+     */
+    public static function confirm($prompt)
+    {
+        $answer = false;
+
+        if (strtolower(self::prompt($prompt." [y/N]", false, 1)) == "y") {
+            $answer = true;
+        }
+
+        return $answer;
 
     }
 

@@ -100,6 +100,10 @@ final class Shell
         self::$_alertMail = $mail;
     }
 
+    public static function dir($dir)
+    {
+        chdir($dir);
+    }
     public static function name($name)
     {
         self::$_name = $name;
@@ -147,7 +151,7 @@ final class Shell
 
     static public function alert($msg, $title = '')
     {
-
+        return self::message()->error($msg, true);
     }
 
     static public function debug($msg)
@@ -178,6 +182,7 @@ final class Shell
     static public function exception(\Exception $E)
     {
         self::alert("Exception : " . $E->getMessage());
+
         exit(2);
     }
 
@@ -440,8 +445,46 @@ final class Shell
             $d = str_ireplace($reg, '', $p->name);
             $out[$d] = array();
             $parameters = $reflector->getMethod($p->name)->getParameters();
+            $docComment = $reflector->getMethod($p->name)->getDocComment();
+
+
+            $doc=[];
+            $docTitle='';
+            if ($docComment)
+            {
+                $docTitle=trim(str_replace(array('/', '*'), '', substr($docComment, 0, strpos($docComment, '@'))));
+                $docTitle=str_replace('   ','',$docTitle);
+
+                if (preg_match_all('/@(\w+)\s+(.*)\r?\n/m', $docComment, $matches,PREG_SET_ORDER)){
+                    foreach ($matches as $mat)
+                    {
+                        if (strtolower($mat[1])=='param')
+                        {
+
+                            $line=$mat[2];
+                            $matparams=[];
+                            if (preg_match_all('/(?P<type>\w+)\s+\$(?P<key>\w+)\s(?P<text>.*)/m',$line,$matparams,PREG_SET_ORDER))
+                            {
+                                foreach ($matparams as $k)
+                                {
+                                    $doc['param'][$k['key']]=['type'=>$k['type'],'text'=>$k['text']];
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            $doc[$mat[1]][]=$mat[2];
+                        }
+
+                    }
+                }
+            }
+            $out[$d]['doc']=$doc;
+            $out[$d]['docTitle']=$docTitle;
+
             foreach ($parameters as $param) {
-                $out[$d][] = array('name' => $param->name, 'isOptional' => $param->isOptional());
+                $out[$d]['params'][] = array('name' => $param->name, 'isOptional' => $param->isOptional());
             }
         }
         return $out;
@@ -458,16 +501,31 @@ final class Shell
         }
         self::makePidAndLogFile(get_class($class));
         self::initVerbosity();
-        self::isICanRun();
 
         // ------------------------------------------------------------------------
-        foreach (self::getAll() as $paramName => $value) {
-            $functName = 'set' . ucwords($paramName);
-            if (method_exists($class, $functName)) {
-                call_user_func_array(array($class, $functName), array($value));
-            }
+        if (self::get('help') || self::get('h'))
+        {
+            return self::renderHelp($class);
         }
-        return self::callableClass($class);
+        try
+        {
+            self::isICanRun();
+
+            foreach (self::getAll() as $paramName => $value) {
+                $functName = 'set' . ucwords($paramName);
+                if (method_exists($class, $functName)) {
+                    call_user_func_array(array($class, $functName), array($value));
+                }
+            }
+
+            return self::callableClass($class);
+
+        }
+        catch (Exception $E)
+        {
+            self::exception($E);
+            exit(2);
+        }
         // ------------------------------------------------------------------------
     }
 
@@ -501,22 +559,84 @@ final class Shell
         }
     }
 
+    static private function renderHelp($class)
+    {
+        $title='';
+
+        if (method_exists($class,'getTitle'))
+        {
+            $title=trim($class->getTitle());
+        }
+
+        $help="";
+        $help.='<bg_light_blue> '.self::getName().' </bg_light_blue>';
+
+
+        if (method_exists($class,'getTitle'))
+        {
+
+            $help.="\n".str_repeat('---',10)."\n";
+            $help.=$title."\n".str_repeat('---',10)."\n";
+
+        }
+
+
+        $lists='';
+        $listParamsForMethod = self::getClassFunctions($class);
+        foreach ($listParamsForMethod as $method => $data) {
+
+                $doc=$data['doc'];
+                $title=$data['docTitle'];$title=str_ireplace(["\n","\r"],' ',$title);
+
+
+
+                $lists.='> <light_yellow>'.$method."</light_yellow>\t\t -- $title\n";
+
+
+
+                if (isset($data['params']) && sizeof($data['params'])) {
+                    foreach ($data['params'] as $param) {
+                        $paramName = $param['name'];
+                        $docparams='';
+                        if (isset($doc['param'][$paramName]))
+                        {
+                            $docparams=implode(',',$doc['param'][$paramName]);
+
+                        }
+                        if ($param['isOptional'] != true) {
+                            $lists.="\t\t\t".'<green>--'.$paramName.'</green>'." <dark_gray>$docparams</dark_gray>\n";
+                        }
+                        else
+                        {
+                            $lists.="\t\t\t".'<dark_gray>[--'.$paramName.']</dark_gray>'." <dark_gray>$docparams</dark_gray>\n";
+                        }
+                    }
+                }
+                $lists.="\n";
+        }//$listParamsForMethod
+
+        $help.="\n".str_repeat('---',10);
+        $help.="\n$lists\n\n\n";
+
+        self::message()->msg($help,[],false,false);
+        exit;
+    }
     static private function callableClass($class)
     {
         $resultOut = '';
         //auto create methods, get all "xyzCommand" functions -> --xyz
         $listParamsForMethod = self::getClassFunctions($class);
-        foreach ($listParamsForMethod as $method => $params) {
+        foreach ($listParamsForMethod as $method => $data) {
             if (self::get($method)) {
                 $name = $method . 'Command';
                 $p = array();
+                $params=$data['params'];
                 if (sizeof($params)) {
                     foreach ($params as $param) {
                         $paramName = $param['name'];
                         $value = self::get($paramName, null);
                         if ($value === null && $param['isOptional'] != true) {
-                            self::error("Can`t call: " . get_class($class) . "->$name() with empty param : " . $paramName);
-                            exit(2);
+                            throw new \Shell\ShellException("Can`t call: " . get_class($class) . "->$name() with empty param : " . $paramName);
                         }
                         $p[$paramName] = $value;
                     }
@@ -524,12 +644,10 @@ final class Shell
                 $p[$method] = true;
 
                 $result = call_user_func_array(array($class, $name), $p);
-
-                if (is_string($result)) {
-                    $resultOut .= $result;
-                } else {
-                    $resultOut .= json_encode($result);
+                if (is_array($result)) {
+                    $result =json_encode($result);
                 }
+                if ($result) self::msg($result);
             }
         }
         // ------------------------------------------------------------------------
