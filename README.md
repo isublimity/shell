@@ -84,6 +84,14 @@ My name bob
 ```
 
 
+### Системные параметры
+```
+-v [-vv | -vvv] 
+--wait
+--help 
+-q 
+
+```
 
 Цвета : 
 
@@ -102,5 +110,58 @@ Shell::warning("WARN!");
 Shell::error("ERORR!!");
 
 ```
+
+#### Заголовок для help
+
+```php
+class xyzActions
+{
+    public function getTitle()
+    {
+        return 'ABOUTE xyzActions - <red>XYZ</red>';
+    }
+}
+```
+
+
+#### Setters 
+
+```php
+class xyzActions
+{
+    public function setColor($value)
+    {
+        echo "CALL setColor($value)\n";
+    }
+}
+
+Автоматически вызовется если : > php test.php --color=YXA
+
+
+```
+
+### PID 
+
+```php
+// Блокирует исполнение 
+Shell::maxExecutionMinutes(0.5);//30 seconds 
+
+
+Shell::dir(__DIR__); // сменить директорию 
+Shell::alertMail('igor@x.x'); // куда отпраить ошибки
+Shell::setPathLog("/tmp/");   // куда записывать все сообщения 
+Shell::setPathPid("/tmp/");   // где PID 
+Shell::setPidCommands(array('check','test')); // какие комманды можно запускать одновренменно 
+
+```
+
+
+
+
+
+
+
+
+
 
 ![](https://api.monosnap.com/rpc/file/download?id=rBvPAlUQsLJJUXDkS9Sd3PKlMTeN5g)
