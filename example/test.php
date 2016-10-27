@@ -67,15 +67,15 @@ class xyzActions
 //        Shell::msg("CALL <light_blue>ABC</light_blue> Command();");
 //    }
 }
-include 'src/Shell.php';
-include 'src/Shell/Color.php';
-include 'src/Shell/Messages.php';
-include 'src/Shell/ShellException.php';
+
+
+
+include_once __DIR__.'/../include.php';
 try
 {
 //    Shell::dir(__DIR__);
     Shell::name("xyz");
-//    Shell::alertMail('na@garika.net');
+//    Shell::alertMail('igor@smi2');
 //    Shell::setPathLog("/tmp/");
 //    Shell::setPathPid("/tmp/");
 //    Shell::setPidCommands(array('list','test'));
