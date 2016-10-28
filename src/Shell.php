@@ -630,8 +630,9 @@ final class Shell
             if (self::get($method)) {
                 $name = $method . 'Command';
                 $p = array();
-                $params=$data['params'];
-                if (sizeof($params)) {
+
+                if (isset($data['params']) && sizeof($data['params'])) {
+                    $params=$data['params'];
                     foreach ($params as $param) {
                         $paramName = $param['name'];
                         $value = self::get($paramName, null);
@@ -644,10 +645,13 @@ final class Shell
                 $p[$method] = true;
 
                 $result = call_user_func_array(array($class, $name), $p);
-                if (is_array($result)) {
-                    $result =json_encode($result);
+
+
+                if (!is_bool($result))
+                {
+                    self::msg($result);
                 }
-                if ($result) self::msg($result);
+
             }
         }
         // ------------------------------------------------------------------------
