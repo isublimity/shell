@@ -124,6 +124,12 @@ class Messages
 
     }
 
+    public function textTable($data)
+    {
+        $renderer = new \MathieuViossat\Util\ArrayToTextTable($data);
+        echo $renderer->getTable();
+
+    }
     /**
      * Prompts the user for input. Optionally masking it.
      *
@@ -132,9 +138,12 @@ class Messages
      * @param   int     $limit      The maximum amount of input to accept
      * @return  string
      */
-    public static function prompt($prompt, $masked=false, $limit=100)
+    public function prompt($prompt, $masked=false, $limit=100)
     {
         echo "$prompt: ";
+
+
+
         if ($masked) {
             `stty -echo`; // disable shell echo
         }
