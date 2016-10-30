@@ -309,8 +309,12 @@ final class Shell
 
             return true;
         } else {
-            self::debug("> Process PID : $pid, Running times: $diff minutes ago");
-            self::info("> process exits, exit...");
+            if (!self::isInteractive())
+            {
+                self::debug("> Process PID : $pid, Running times: $diff minutes ago");
+                self::info("> process exits, exit...");
+            }
+
         }
 
 
