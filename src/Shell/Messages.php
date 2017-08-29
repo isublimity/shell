@@ -170,11 +170,11 @@ class Messages
      * @param   string  $prompt     The prompt to show the user
      * @return  bool
      */
-    public static function confirm($prompt)
+    public function confirm($prompt)
     {
         $answer = false;
 
-        if (strtolower(self::prompt($prompt." [y/N]", false, 1)) == "y") {
+        if (strtolower($this->prompt($prompt." [y/N]", false, 1)) == "y") {
             $answer = true;
         }
 
