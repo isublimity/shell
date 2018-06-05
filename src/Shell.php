@@ -71,6 +71,7 @@ final class Shell
     private static $_maxTimeMins = -1;//13*60;
     private static $_pid = null;
     private static $_isMakePid = false;
+    private static $_exitCodeOnPidExists = 2;
 
 
     public static function setPathPid($path, $prefix = '')
@@ -344,7 +345,7 @@ final class Shell
                 if (!self::isInteractive()) {
                     self::error("ShellPID:Can`t run pid exists  : " . self::getPidFileName() . "\n");
                 }
-                exit(2);
+                exit(self::$_exitCodeOnPidExists);
             }
         }
         register_shutdown_function('Shell::stopShell');
@@ -492,6 +493,11 @@ final class Shell
             }
         }
         return $out;
+    }
+
+    static public function setExitCodeOnPidExists($code)
+    {
+        self::$_exitCodeOnPidExists=intval($code);
     }
 
     static public function run($class)
