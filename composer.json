@@ -1,0 +1,32 @@
+{
+"name": "isublimity/shell",
+"type": "library",
+"description": "Shell Helper",
+"keywords": [
+"shell",
+"cli",
+"php"
+],
+"homepage": "https://github.com/isublimity/shell",
+"license": "MIT",
+"authors": [
+{
+"name": "Igor Strykhar",
+"email": "isublimity@gmail.com",
+"homepage": "https://github.com/isublimity"
+}
+],
+"require": {
+"php": "^5.6",
+"ext-curl": "*"
+},
+"require-dev": {
+"phpunit/phpunit": "^7.0"
+},
+"autoload": {
+"psr-4": {
+"Shell\\": "src/"
+}
+},
+}
+}
