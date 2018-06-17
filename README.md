@@ -1,16 +1,29 @@
-php cli helper
+## Php cli helper
 
 
 See other 
 
 https://github.com/nramenta/clio/blob/master/README.md
+
 https://github.com/c9s/CLIFramework/blob/master/README.md
+
 https://github.com/wp-cli/php-cli-tools
+
 https://raw.githubusercontent.com/dealnews/Console/master/src/Console.php
+
 https://github.com/nramenta/clio
+
 https://github.com/thephpleague/climate
 
 
+## Install
+
+```
+composer require isublimity/shell
+
+```
+
+## Use case
 
 Есть класс который нам нужно вызвать из консоли 
 ```php
