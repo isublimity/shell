@@ -164,7 +164,8 @@ Shell::dir(__DIR__); // сменить директорию
 Shell::alertMail('igor@x.x'); // куда отпраить ошибки
 Shell::setPathLog("/tmp/");   // куда записывать все сообщения 
 Shell::setPathPid("/tmp/");   // где PID 
-Shell::setPidCommands(array('check','test')); // какие комманды можно запускать одновренменно 
+Shell::setExitCodeOnPidExists(2);   // Exit code on PID file Exists
+Shell::setPidCommands(array('check','test')); // какие комманды можно запускать одновренменно
 
 ```
 
