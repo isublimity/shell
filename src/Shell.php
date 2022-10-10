@@ -650,9 +650,9 @@ final class Shell
                             throw new \Shell\ShellException("Can`t call: " . get_class($class) . "->$name() with empty param : " . $paramName);
                         }
                         $p[$paramName] = $value;
+                        if ($paramName === $method) $p[$method] = true;
                     }
                 }
-                $p[$method] = true;
 
                 $result = call_user_func_array(array($class, $name), $p);
 

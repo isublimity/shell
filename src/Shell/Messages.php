@@ -124,11 +124,12 @@ class Messages
 
     }
 
-    public function textTable($data)
+    public function textTable($data,$echo=true)
     {
         $renderer = new \MathieuViossat\Util\ArrayToTextTable($data);
-        echo $renderer->getTable();
-
+        $txt=$renderer->getTable();
+        if ($echo) {echo $txt;return '';}
+        return $txt;
     }
     /**
      * Prompts the user for input. Optionally masking it.
