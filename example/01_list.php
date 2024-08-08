@@ -1,8 +1,8 @@
 <?php
-
+namespace command;
 include_once __DIR__.'/../include.php';
 
-class listActions
+class lister
 {
     /**
      * Получить список бла-бла
@@ -16,13 +16,13 @@ class listActions
 
         \Shell::message()->msg("My name $name ");
         if ($reg) \Shell::message()->msg( " ;) ");
-        throw new Exception('ERROR !!ZASD');
+        throw new \Exception('ERROR !!ZASD');
         return 'OK!';
     }
 }
 
 
-Shell::name("aggrSyncer");
-Shell::run(
-    new listActions()
+\Shell::name("aggrSyncer");
+\Shell::run(
+    new \command\lister()
 );

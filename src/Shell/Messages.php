@@ -35,7 +35,7 @@ class Messages
 
     public function setCallMethod($m)
     {
-        $this->methodName=$m;
+        $this->methodName=str_replace('\\','-',$m);
     }
     public function setEnvironment($environment)
     {

@@ -682,6 +682,8 @@ final class Shell
                     }
                 }
 
+                \Shell::message()->setCallMethod(get_class($class).'\\'.$method);
+
                 $result = call_user_func_array(array($class, $name), $p);
 
 
