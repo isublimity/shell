@@ -14,14 +14,15 @@ class listActions
     public function listCommand($name,$reg=false)
     {
 
-        echo "My name $name ";
-        if ($reg) echo " ;) ";
-        echo "\n";
+        \Shell::message()->msg("My name $name ");
+        if ($reg) \Shell::message()->msg( " ;) ");
+        throw new Exception('ERROR !!ZASD');
+        return 'OK!';
     }
 }
 
 
-Shell::name("list");
+Shell::name("aggrSyncer");
 Shell::run(
     new listActions()
 );

@@ -110,8 +110,26 @@ final class Shell
         self::$_name = $name;
     }
 
+    public static function getEnvironment()
+    {
+        if (isset($_ENV['KUBERNETES_ENVIRONMENT']))
+        {
+            $e=$_ENV['KUBERNETES_ENVIRONMENT'];
+            if (is_string($e)) return $e;
+        }
+        return self::get('environment'); // or see --environment=[prod/dev]
+    }
+    public static function isKubernetes()
+    {
+        if (self::get('kubernetes')) return true;
+        if (self::get('k8s')) return true;
+        if (isset($_ENV['KUBERNETES_SERVICE_HOST'])) return true;
+        return false;
+    }
+
     public static function isInteractive()
     {
+        if (self::isKubernetes()) return true;
         if (self::get('cron')) return true;
         return defined("STDOUT") && posix_isatty(STDOUT);
     }
@@ -145,14 +163,14 @@ final class Shell
     static public function message()
     {
         if (!self::$_messages) {
-            self::$_messages = new \Shell\Messages(self::getLogFile(), self::isInteractive(), self::$_alertMail, self::$_verbosity);
+            self::$_messages = new \Shell\Messages(self::getLogFile(), self::isInteractive(), self::$_alertMail, self::$_verbosity,self::isKubernetes());
         }
         return self::$_messages;
     }
 
     static public function alert($msg, $title = '')
     {
-        return self::message()->error($msg, true);
+        return self::message()->error($msg);
     }
 
     static public function debug($msg)
@@ -172,7 +190,7 @@ final class Shell
 
     static public function error($msg, $sendAlert = true)
     {
-        return self::message()->error($msg, $sendAlert);
+        return self::message()->error($msg);
     }
 
     static public function msg($message, $color = [], $eol = true)
@@ -183,12 +201,12 @@ final class Shell
     static public function exception(\Exception $E)
     {
         self::alert("Exception : " . $E->getMessage());
-
         exit(2);
     }
 
     static private function makePidAndLogFile($call_class_name)
     {
+        if (self::isKubernetes()) return false;
         $ext_pid = '';
         if (sizeof(self::$_pidListCommands)) {
             foreach (self::$_pidListCommands as $key => $method) {
@@ -267,7 +285,7 @@ final class Shell
 
     private static function checkShell()
     {
-
+        if (self::isKubernetes()) return false;
         $f = self::getPidFileName();
 
         clearstatcache(true, $f);// drop cache
@@ -420,8 +438,10 @@ final class Shell
 
     private static function startShell()
     {
-        if (!file_put_contents(self::getPidFileName(), getmypid())) {
-            throw new \Shell\ShellException('error : Shell , cant file_put_contents ! in ' . self::getPidFileName());
+        if (!self::isKubernetes()) {
+            if (!file_put_contents(self::getPidFileName(), getmypid())) {
+                throw new \Shell\ShellException('error : Shell , cant file_put_contents ! in ' . self::getPidFileName());
+            }
         }
         self::$_isMakePid = true;
     }
@@ -429,7 +449,8 @@ final class Shell
     public static function stopShell()
     {
         if (self::$_isMakePid) {
-            @unlink(self::getPidFileName());
+            if (!self::isKubernetes())
+                @unlink(self::getPidFileName());
         }
     }
 
@@ -509,6 +530,9 @@ final class Shell
         if (!is_object($class)) {
             throw new \Shell\ShellException("Class must be is_object");
         }
+
+
+
         self::makePidAndLogFile(get_class($class));
         self::initVerbosity();
 
@@ -519,6 +543,10 @@ final class Shell
         }
         try
         {
+            \Shell::message()->setEnvironment(\Shell::getEnvironment());
+            \Shell::message()->setAppName(self::$_name);
+            \Shell::message()->setCallMethod(get_class($class));
+
             self::isICanRun();
 
             foreach (self::getAll() as $paramName => $value) {

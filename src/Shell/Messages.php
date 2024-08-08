@@ -3,15 +3,23 @@ namespace Shell;
 class Messages
 {
 
+    const WARN = 'warning';
+    const INFO = 'info';
+    const ERROR = 'error';
+
     private $isInteractive = true;
+    private $isKubernetes = true;
     private $logFile = '';
     private $verbosity = 0;
     private $alertMail = '';
+    private $appName = '';
+    private $methodName = '';
+    private $environment = '';
     protected $wrapped = '';
     private $_color;
 
 
-    public function __construct($logFile = '', $isInteractive = '', $alertMail = '', $verbosity_level = 0)
+    public function __construct($logFile = '', $isInteractive = '', $alertMail = '', $verbosity_level = 0,$isKubernetes=false)
     {
 
         $this->verbosity = $verbosity_level;
@@ -19,6 +27,26 @@ class Messages
         $this->logFile = $logFile;
         $this->alertMail = $alertMail;
         $this->_color = new Color();
+        $this->isKubernetes = $isKubernetes;
+        $this->appName = 'app';
+        $this->environment = 'dev';
+        $this->methodName = '';
+    }
+
+    public function setCallMethod($m)
+    {
+        $this->methodName=$m;
+    }
+    public function setEnvironment($environment)
+    {
+        if ($environment) {
+            $this->environment = $environment;
+        }
+
+    }
+    public function setAppName($appName)
+    {
+        $this->appName = $appName;
     }
 
     /**
@@ -50,11 +78,11 @@ class Messages
 
     public function warning($message)
     {
-        return $this->msg($message,[\Shell::yellow]);
+        return $this->msg($message,[\Shell::yellow],true,true,self::WARN);
     }
-    public function error($message,$sendAlert=true)
+    public function error($message)
     {
-        return $this->msg($message,[\Shell::white,\Shell::bg_red,\Shell::bold]);
+        return $this->msg($message,[\Shell::white,\Shell::bg_red,\Shell::bold],true,true,self::ERROR);
     }
     public function info($message)
     {
@@ -67,13 +95,40 @@ class Messages
         $this->color()->reset();
         return $message;
     }
-    public function msg($message, $styles, $eol = true, $timepoints=true)
+    public function msg($message, $styles = 0, $eol = true, $timepoints=true,$level=self::INFO)
     {
 
         if (!(is_string($message) || is_numeric($message)) )
         {
-            $message=json_encode($message,JSON_PRETTY_PRINT);
+            if ($this->isKubernetes) {
+                $message=json_encode($message,JSON_UNESCAPED_UNICODE);
+            } else {
+                $message=json_encode($message,JSON_PRETTY_PRINT);
+            }
+
         }
+
+        // ------------------------------------------------
+
+        if ($this->isKubernetes) {
+
+            echo json_encode(
+                    [
+                        'timestamp'=>date('Y-m-d H:i:s T'),
+                        'message'=>$message,
+                        'verbose'=>intval($this->verbosity),
+                        'environment'=>$this->environment,
+                        'log_level'=>$level,
+                        'app'=>$this->appName,    // syncer,loader...
+                        'method'=>$this->methodName, // [update,insert...]
+
+                    ],
+                    JSON_UNESCAPED_UNICODE
+                )."\n";
+            return true;
+        }
+
+
         if (is_int($styles) && $styles > 1) {
             $xc = $styles;
             $styles = [];
@@ -117,9 +172,13 @@ class Messages
 
         }
         if ($eol) $message=trim($message);
+
         echo $message.($eol?PHP_EOL:"");
         flush();
-        $this->storeFile($message);
+
+        if (!$this->isKubernetes) {
+            $this->storeFile($message);
+        }
         return true;
 
     }
