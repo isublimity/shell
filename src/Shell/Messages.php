@@ -64,7 +64,7 @@ class Messages
 
     private function storeFile($msg)
     {
-        if (!file_put_contents($this->logFile,trim($msg)."\n",FILE_APPEND))
+        if ($this->logFile && !file_put_contents($this->logFile,trim($msg)."\n",FILE_APPEND))
         {
             throw new \Exception("Can`t store to file");
         }

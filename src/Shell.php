@@ -96,6 +96,19 @@ final class Shell
         self::$_logFilePrefix=$prefix;
     }
 
+    public static function setLogFile($name , $path = '')
+    {
+        if (!$path)
+        {
+            self::$_logFilePath=sys_get_temp_dir();
+        }
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+        // log file
+        self::$_logFile = $path . DIRECTORY_SEPARATOR . $name . '.log';
+    }
+
     public static function alertMail($mail)
     {
         self::$_alertMail = $mail;
