@@ -279,7 +279,13 @@ final class Shell
         $pid[] = $call_class_name;
         if ($ext_pid) $pid[] = preg_replace("/[^A-Za-z0-9_-]+/", '', $ext_pid);
 
-        self::$_logFile = $path . DIRECTORY_SEPARATOR . implode('', $pid) . '.log';
+        $fname = implode('', $pid);
+        $fname = preg_replace("/[^A-Za-z0-9_-]+/", '_', $fname);
+        if (!self::$_logFile) {
+            self::$_logFile = $path . DIRECTORY_SEPARATOR . $fname . '.log';
+        }
+
+
 
         return true;
     }
