@@ -205,7 +205,7 @@ class Messages
 
 
         if ($masked) {
-            `stty -echo`; // disable shell echo
+            shell_exec('stty -echo'); // disable shell echo
         }
         $buffer = "";
         $char = "";
@@ -218,7 +218,7 @@ class Messages
             $buffer.= $char;
         }
         if ($masked) {
-            `stty echo`; // enable shell echo
+            shell_exec('stty echo'); // enable shell echo
             echo "\n";
         }
         return $buffer;
